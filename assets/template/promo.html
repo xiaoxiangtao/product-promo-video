@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>Product Promo</title>
+<!-- 产品介绍视频模板（示例产品 Notely 是虚构的，换成你的产品）。
+     规则：① 所有画面都是 render(t) 的纯函数，任意一帧可单独复现；② 时间轴只写在下方 #timeline JSON 里，
+     配乐 / 音效 / 人声脚本读同一份，改分镜不用两边手工同步；③ 文案全部放 TX，?lang=en 出英文版。 -->
+<style>
+:root{--ink:#1d1d1f;--sub:#6e6e73;--accent:#4f46e5;--coral:#ff6f61;--purple:#5b3fd6;--sun:#ffc93c;--paper:#fbf4e6;
+  --font:-apple-system,"SF Pro Display","PingFang SC","Helvetica Neue","Noto Sans SC",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#000;font-family:var(--font);-webkit-font-smoothing:antialiased}
+.abs{position:absolute}
+#stage{position:absolute;inset:0;overflow:hidden}
+/* 功能段：中性浅色桌面 + 极淡的品牌色光（彩色只留给标题关键词） */
+#desk{inset:0;background:radial-gradient(900px 600px at 8% 0%,rgba(255,111,97,.07),transparent 70%),radial-gradient(900px 700px at 100% 100%,rgba(138,79,255,.06),transparent 70%),linear-gradient(160deg,#f7f8fa,#edf0f5)}
+#grain{inset:0;pointer-events:none;z-index:60;mix-blend-mode:multiply}
+/* 标题区：左上，主标题 + 副标题，关键词渐变色 */
+#hl{left:110px;top:120px;width:760px;z-index:5}
+#h1{font-size:74px;font-weight:700;letter-spacing:-1.5px;color:var(--ink);line-height:1.12}
+#h2{margin-top:40px;font-size:28px;font-weight:500;color:var(--sub);line-height:1.45}
+.g{-webkit-background-clip:text;background-clip:text;color:transparent}
+.g1{background-image:linear-gradient(90deg,#ff7a18,#ff3d77)}.g2{background-image:linear-gradient(90deg,#ff3d77,#8a4fff)}
+.g3{background-image:linear-gradient(90deg,#2f7bff,#00c2d1)}.g4{background-image:linear-gradient(90deg,#0f8f6f,#2c7da0)}
+#deco{left:0;top:0;z-index:6;pointer-events:none;overflow:visible}
+/* 产品窗口（按真实界面复刻；这里是占位示例） */
+.win{position:absolute;border-radius:20px;background:#fff;box-shadow:0 18px 40px rgba(30,20,60,.12),0 2px 6px rgba(30,20,60,.06),0 0 0 1px rgba(0,0,0,.05);overflow:hidden;z-index:4}
+.chrome{height:48px;display:flex;align-items:center;padding:0 18px;gap:8px;background:#f6f6f7;border-bottom:1px solid #ececef;font-size:16px;color:#555}
+.chrome i{width:13px;height:13px;border-radius:50%;display:inline-block}.chrome span{margin-left:16px;font-weight:600}
+#app{left:960px;top:190px;width:840px;height:700px}
+.side{position:absolute;left:0;top:48px;bottom:0;width:200px;background:#f6f6f8;border-right:1px solid #ececef;padding:24px 14px}
+.side p{height:36px;border-radius:9px;margin-bottom:6px;font-size:17px;color:#555;padding:0 12px;line-height:36px}.side p.on{background:#ebe8ff;color:var(--accent);font-weight:600}
+.view{position:absolute;left:240px;top:82px;right:40px;bottom:34px}
+.note{font-size:24px;line-height:1.5;color:#2a2a2e;padding:12px 0;border-bottom:1px solid #f0f0f2}
+#btn{position:absolute;right:0;top:-6px;height:46px;padding:0 22px;border-radius:23px;background:var(--ink);color:#fff;font-size:19px;font-weight:600;line-height:46px}
+#card{margin-top:26px;border-radius:18px;background:#faf8ff;box-shadow:0 0 0 1px #e4ddff,0 14px 30px rgba(79,70,229,.10);padding:22px 26px;transform-origin:50% 0}
+#card h5{font-size:16px;color:#6b46d9;letter-spacing:1px;margin-bottom:8px}#card p{font-size:23px;line-height:1.65;color:#1d1d1f}
+#msgs{position:absolute;left:0;right:0;top:0;bottom:92px;display:flex;flex-direction:column;justify-content:flex-end;gap:14px}
+.mu{align-self:flex-end;max-width:75%;background:var(--accent);color:#fff;border-radius:18px 18px 4px 18px;padding:12px 18px;font-size:22px}
+.ma{align-self:flex-start;max-width:88%;background:#f2f2f5;border-radius:18px 18px 18px 4px;padding:14px 18px;font-size:22px;line-height:1.5;color:#1d1d1f;white-space:pre-wrap}
+.ma small{display:block;margin-top:8px;font-size:16px;color:#6b46d9}
+#inp{position:absolute;left:0;right:72px;bottom:0;height:62px;border-radius:31px;background:#f4f4f6;box-shadow:inset 0 0 0 1px #e6e6ea;padding:0 24px;font-size:22px;line-height:62px;color:#1d1d1f;white-space:nowrap;overflow:hidden}
+#inp.ph{color:#a1a1aa}
+#send{position:absolute;right:0;bottom:3px;width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;font-size:26px;display:grid;place-items:center}
+#stat{font-size:150px;font-weight:800;letter-spacing:-5px;color:var(--ink);line-height:1;transform-origin:0 100%}#stat small{font-size:56px;letter-spacing:0;margin-left:10px}
+#statL{margin:16px 0 30px;font-size:24px;color:var(--sub)}
+.res{height:58px;border-radius:14px;background:#f7f7f9;margin-bottom:12px;padding:0 20px;display:flex;align-items:center;gap:14px;font-size:21px;color:#2a2a2e}
+.res i{font-style:normal;font-size:15px;font-weight:700;color:#0f8f6f;background:#e4f5ef;padding:3px 10px;border-radius:8px}
+/* 总结段：2×2 卡片 + 右侧主角（App 图标） */
+#jobs{left:110px;top:470px;width:760px;display:grid;grid-template-columns:1fr 1fr;gap:22px;z-index:3}
+.job{position:relative;height:118px;border-radius:20px;background:#fff;box-shadow:0 12px 28px rgba(30,20,60,.10),0 0 0 1px rgba(0,0,0,.05);padding:22px 24px 0 98px}
+.job i{position:absolute;left:24px;top:28px;width:58px;height:58px;border-radius:16px;display:grid;place-items:center;font-style:normal;font-size:28px;font-weight:800;color:#fff}
+.job b{display:block;font-size:30px;font-weight:700;color:#1d1d1f}.job span{display:block;margin-top:6px;font-size:19px;color:#6e6e73}
+#hero{left:1180px;top:260px;width:480px;height:480px;border-radius:108px;background:linear-gradient(140deg,#ff7a6b,#8a4fff);box-shadow:0 40px 80px rgba(91,63,214,.35);display:grid;place-items:center;color:#fff;font-size:260px;font-weight:800;z-index:3}
+/* 片头/片尾：剪纸拼贴（撕边纸 + 两层阴影 + 胶带，入场按 12fps 定格） */
+#col{inset:0;z-index:30;display:none;overflow:hidden;background:radial-gradient(1200px 800px at 20% 30%,#ff8473,transparent 70%),var(--coral)}
+.grp{position:absolute;inset:0}
+.it{position:absolute;transform-origin:50% 50%}
+.paper{position:relative;filter:drop-shadow(0 1px 1px rgba(80,10,20,.28)) drop-shadow(0 12px 16px rgba(80,10,20,.20))}
+.paper>i{position:absolute;inset:0;filter:url(#torn)}
+.paper>b{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;color:var(--ink)}
+.tape{height:40px;background:rgba(255,250,230,.62);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.ctx{position:absolute;white-space:nowrap}
+mark{position:relative;display:inline-block;padding:0 8px;color:var(--ink);background:none;z-index:1}
+mark::before{content:"";position:absolute;inset:-4px -2px;background:var(--sun);z-index:-1;transform:rotate(-3deg);border-radius:3px}
+/* 光标 + 点击涟漪 */
+#cursor{left:0;top:0;width:34px;height:42px;z-index:80;transform-origin:8px 4px;opacity:0;filter:drop-shadow(0 3px 5px rgba(0,0,0,.3))}
+#ripple{left:0;top:0;width:70px;height:70px;border-radius:50%;border:3px solid rgba(79,70,229,.7);z-index:79;opacity:0}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><filter id="torn" x="-4%" y="-4%" width="108%" height="108%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="7"/><feDisplacementMap in="SourceGraphic" scale="10"/></filter></svg>
+<div id="stage">
+  <div id="desk" class="abs"></div>
+  <div id="hl" class="abs"><div id="h1"></div><div id="h2"></div></div>
+  <svg id="deco" class="abs" width="1920" height="1080"></svg>
+  <div id="app" class="win">
+    <div class="chrome"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span id="appTitle"></span></div>
+    <div class="side" id="side"></div>
+    <div class="view" id="v1"><div id="notes"></div><div id="btn"></div><div id="card"></div></div>
+    <div class="view" id="v2"><div id="msgs"><div class="mu" id="mu"></div><div class="ma" id="ma"></div></div><div id="inp"></div><div id="send">↑</div></div>
+    <div class="view" id="v3"><div id="stat"></div><div id="statL"></div><div id="resl"></div></div>
+  </div>
+  <div id="jobs" class="abs"></div>
+  <div id="hero" class="abs"></div>
+  <div id="col" class="abs"><div id="gIntro" class="grp"></div><div id="gEnd" class="grp"></div></div>
+  <div id="grain" class="abs"></div>
+  <div id="ripple" class="abs"></div>
+  <svg id="cursor" class="abs" viewBox="0 0 34 42"><path d="M3 2 L3 33 L11 25 L17 39 L23 36 L17 23 L28 23 Z" fill="#111" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/></svg>
+</div>
+
+<!-- 唯一的时间轴：at = [小节, 拍]（也可直接写秒）。scenes.energy 0–3 控制配乐配器密度；events 的 type 决定音效，id 供画面引用。 -->
+<script id="timeline" type="application/json">
+{
+  "bpm": 96, "bars": 16, "fps": 30,
+  "scenes": [
+    {"id": "intro", "bar": 0,  "bars": 2, "energy": 1},
+    {"id": "f1",    "bar": 2,  "bars": 3, "energy": 2, "deco": "wave"},
+    {"id": "f2",    "bar": 5,  "bars": 3, "energy": 2, "deco": "marker"},
+    {"id": "f3",    "bar": 8,  "bars": 3, "energy": 3, "deco": "wave"},
+    {"id": "recap", "bar": 11, "bars": 2, "energy": 3, "deco": "loop"},
+    {"id": "outro", "bar": 13, "bars": 3, "energy": 1}
+  ],
+  "events": [
+    {"id": "title",  "at": [0, 2], "type": "pop"},
+    {"id": "pick",   "at": [2, 3], "type": "click"},
+    {"id": "result", "at": [3, 0], "type": "ding"},
+    {"id": "focus",  "at": [5, 2], "type": "click"},
+    {"id": "typing", "at": [5, 3], "type": "typing", "dur": 1.3, "n": 12},
+    {"id": "send",   "at": [6, 2], "type": "click"},
+    {"id": "reply",  "at": [6, 3], "type": "ding"},
+    {"id": "stat",   "at": [8, 1], "type": "whoosh"},
+    {"id": "r1",     "at": [11, 1], "type": "pop"},
+    {"id": "r2",     "at": [11, 2], "type": "pop"},
+    {"id": "r3",     "at": [11, 3], "type": "pop"},
+    {"id": "r4",     "at": [12, 0], "type": "pop"},
+    {"id": "cta",    "at": [14, 0], "type": "pop"}
+  ],
+  "voice": [],
+  "music": {"chords": [[62,66,69,73],[59,62,66,69],[55,59,62,66],[57,61,64,69]], "bass": [38,35,43,45]}
+}
+</script>
+<script>
+const $=id=>document.getElementById(id);
+// ---------- 时间轴 ----------
+const TL=JSON.parse($('timeline').textContent);
+const BEAT=60/TL.bpm, BAR=4*BEAT, DURATION=TL.bars*BAR; window.DURATION=DURATION;
+const at=v=>Array.isArray(v)?v[0]*BAR+(v[1]||0)*BEAT:v, beat=n=>n*BEAT;
+const S=Object.fromEntries(TL.scenes.map(s=>[s.id,{...s,t0:s.bar*BAR,t1:(s.bar+s.bars)*BAR}]));
+const EV=TL.events.map(e=>({...e,t:at(e.at)})), T=Object.fromEntries(EV.filter(e=>e.id).map(e=>[e.id,e.t]));
+// ---------- 文案（只翻标题与说明；产品自身界面是否翻译，取决于真实产品有没有英文界面） ----------
+const Q=new URLSearchParams(location.search), LANG=Q.get('lang')==='en'?'en':'zh';
+const TX={zh:{name:'Notely',tag:'写下来的，<br>它帮你<mark>理清</mark>。',sub:'一个会自己整理的笔记本',
+  head:{f1:['点一下，<span class="g g1">整理好</span>。','零散的想法，自动归成要点和待办。'],
+        f2:['有问题，<span class="g g2">问笔记</span>。','用你自己的话提问，答案附上出处。'],
+        f3:['快得<span class="g g3">不用等</span>。','本地索引，一万条笔记也是一眨眼。'],
+        recap:['四件小事，<span class="g g4">一个本子</span>。','记录、整理、提问、回顾。']},
+  app:'Notely — 周会记录', side:['全部笔记','周会记录','灵感','待办'],
+  notes:['周三和设计对齐首页改版','数据埋点下周一上线？','前端岗位还差 1 人'], btn:'✦ 整理',
+  card:['要点','· 首页改版：周三与设计对齐<br>· 埋点：下周一上线<br>· 招聘：前端还差 1 人'],
+  ph:'问问你的笔记…', typed:'埋点什么时候上线？', reply:'下周一上线。', src:'出处：周会记录 · 第 2 条',
+  stat:'0.3', unit:'秒', statL:'在 10,000 条笔记里找到答案', res:[['周会记录','埋点下周一上线'],['产品周报','埋点方案评审通过'],['灵感','埋点看板草图']],
+  jobs:[['✎','记录','随手写下'],['✦','整理','一键成要点'],['?','提问','答案带出处'],['↻','回顾','每周自动汇总']],
+  end:'写下来，<br>剩下的<mark>交给它</mark>。', cta:'↓  notely.app'},
+ en:{name:'Notely',tag:'You write it down.<br>It <mark>sorts it out</mark>.',sub:'The notebook that organizes itself',
+  head:{f1:['One click, <span class="g g1">sorted</span>.','Scattered thoughts become key points and to-dos.'],
+        f2:['Just <span class="g g2">ask your notes</span>.','Ask in your own words. Answers come with sources.'],
+        f3:['Too fast <span class="g g3">to wait for</span>.','Local index. Ten thousand notes, one blink.'],
+        recap:['Four small things. <span class="g g4">One notebook</span>.','Capture, organize, ask, review.']},
+  app:'Notely — Weekly sync', side:['All notes','Weekly sync','Ideas','To-dos'],
+  notes:['Align homepage redesign on Wed','Tracking goes live next Mon?','Still hiring 1 frontend dev'], btn:'✦ Organize',
+  card:['KEY POINTS','· Redesign: align with design on Wed<br>· Tracking: live next Monday<br>· Hiring: 1 frontend dev to go'],
+  ph:'Ask your notes…', typed:'When does tracking go live?', reply:'Next Monday.', src:'Source: Weekly sync · item 2',
+  stat:'0.3', unit:'s', statL:'to search 10,000 notes', res:[['Weekly sync','Tracking live next Mon'],['Product weekly','Tracking plan approved'],['Ideas','Tracking dashboard sketch']],
+  jobs:[['✎','Capture','Jot it down'],['✦','Organize','Key points in one click'],['?','Ask','Answers with sources'],['↻','Review','Weekly digest']],
+  end:'Write it down.<br><mark>Leave the rest</mark> to it.', cta:'↓  notely.app'}}[LANG];
+if(LANG==='en')document.documentElement.lang='en';
+if(Q.get('anon')==='1')TX.cta=LANG==='en'?'↓  Source on GitHub':'↓  源码在 GitHub';   // 脱敏版：片尾不出现带个人信息的地址
+
+// ---------- 缓动与通用动效 ----------
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)), P=(t,a,b)=>clamp((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3), eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2, eb=x=>1+2.70158*Math.pow(x-1,3)+1.70158*Math.pow(x-1,2);
+const E=(t,a,b)=>eo(P(t,a,b)), EI=(t,a,b)=>eio(P(t,a,b)), lerp=(a,b,k)=>a+(b-a)*k;
+const win=(t,a,b,c,d)=>Math.min(E(t,a,b),1-EI(t,c,d));          // a→b 渐入，c→d 渐出
+function reveal(el,k,dy=24,blur=10){el.style.opacity=k;el.style.transform=`translateY(${(1-k)*dy}px)`;el.style.filter=k<1?`blur(${(1-k)*blur}px)`:'none'}
+function pop(el,t,t0,dur=0.3,s0=1.35){const k=P(t,t0,t0+dur);el.style.opacity=clamp(k*4);el.style.transform=`scale(${k<=0?0.01:lerp(s0,1,eb(k))})`;return k}
+
+// ---------- 纸张颗粒 ----------
+$('grain').style.backgroundImage=`url("data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .5 0 0 0 0 .45 0 0 0 0 .4 0 0 0 .55 0"/></filter><rect width="400" height="400" filter="url(#n)"/></svg>')}")`;
+
+// ---------- 片头 / 片尾：剪纸拼贴 ----------
+const ITEMS=[];
+function put(g,x,y,html,{rot=0,z=1,t0=0,mode='stick'}={}){const e=document.createElement('div');e.className='it';e.style.cssText=`left:${x}px;top:${y}px;z-index:${z}`;e.innerHTML=html;$(g).appendChild(e);ITEMS.push({e,t0,rot,mode});return e}
+const paper=(w,h,fill,{r=0,inner=''}={})=>`<div class="paper" style="width:${w}px;height:${h}px"><i style="background:${fill};border-radius:${r}px"></i>${inner}</div>`;
+const tape=(g,x,y,w,rot,t0)=>put(g,x,y,`<div class="tape" style="width:${w}px"></div>`,{rot,z:40,t0});
+const ctext=(g,x,y,html,css,{z=20,rot=0,t0=0}={})=>put(g,x,y,`<div class="ctx" style="${css}">${html}</div>`,{rot,z,t0,mode:'rise'});
+const BIG=(LANG==='en'?'font:800 70px/1.28 var(--font);':'font:800 84px/1.3 var(--font);')+'color:#fff8ec;text-shadow:0 2px 0 rgba(120,20,20,.18)';
+function cluster(g,t0,sunY){   // 右侧团块：深紫大纸 + 黄色纸太阳 + 产品名字母（首尾同构图）
+  put(g,1010,110,paper(830,860,'var(--purple)'),{rot:-4,z:2,t0,mode:'slam'});
+  put(g,1500,sunY,paper(230,230,'var(--sun)',{r:115}),{rot:0,z:3,t0:t0+0.25});
+  [...TX.name].forEach((ch,i)=>put(g,1080+i*124,400+(i%2)*26,paper(112,150,'var(--paper)',{inner:`<b style="font-size:104px">${ch}</b>`}),{rot:[-6,4,-3,5,-4,3][i%6],z:10+i,t0:T.title+(g==='gEnd'?S.outro.t0:0)+i*0.1,mode:'slam'}));
+}
+cluster('gIntro',0.05,160);
+ctext('gIntro',130,LANG==='en'?300:290,TX.tag,BIG,{t0:0.7});
+ctext('gIntro',136,LANG==='en'?520:540,TX.sub,'font:600 30px var(--font);color:rgba(255,248,236,.88)',{t0:T.title+0.6});
+cluster('gEnd',S.outro.t0+0.1,700);   // 片尾太阳落到字母下方（日落），与片头首尾呼应
+ctext('gEnd',130,290,TX.end,BIG,{t0:S.outro.t0+beat(2)});
+put('gEnd',120,560,paper(440,86,'var(--paper)',{inner:`<b style="font-size:32px;font-weight:700;justify-content:start;padding-left:34px">${TX.cta}</b>`}),{rot:-2,z:22,t0:T.cta});
+tape('gEnd',92,546,110,-30,T.cta+0.1);
+function enter(it,t){   // 入场进度按 12fps 量化 → 定格动画手感
+  const tq=Math.floor(t*12)/12,{e,t0,rot,mode}=it;
+  if(mode==='rise'){const k=E(tq,t0,t0+0.35);e.style.opacity=k;e.style.transform=`translateY(${(1-k)*26}px) rotate(${rot}deg)`;return}
+  const k=P(tq,t0,t0+(mode==='slam'?0.25:0.3)),s0=mode==='slam'?1.7:1.25;
+  e.style.opacity=k>0?1:0;e.style.transform=`rotate(${rot+(1-eo(k))*(mode==='slam'?-8:10)}deg) scale(${k<=0?0.01:lerp(s0,1,eb(k))})`}
+function collage(t){
+  const seg=[[S.intro,'gIntro'],[S.outro,'gEnd']].find(([s])=>t>=s.t0-0.01&&t<s.t1+0.45),col=$('col');
+  if(!seg){col.style.display='none';return false}
+  const [s,g]=seg;col.style.display='block';
+  const yin=s.t0===0?0:(1-EI(t,s.t0-0.05,s.t0+0.4))*1180, yout=s.t1>=DURATION?0:EI(t,s.t1-0.05,s.t1+0.4)*-1180;
+  col.style.transform=`translateY(${yin+yout}px)`;
+  ['gIntro','gEnd'].forEach(x=>$(x).style.display=x===g?'block':'none');
+  ITEMS.forEach(it=>{if(it.e.parentNode.id===g)enter(it,t)});
+  return true;
+}
+
+// ---------- 标题 + 手绘强调（波浪线=动作/过程，圈线=成果，马克笔=重点） ----------
+const HEAD=TL.scenes.filter(s=>TX.head[s.id]).map(s=>({s:S[s.id],h:TX.head[s.id],deco:s.deco}));
+const DCOL={g1:'#ff6f61',g2:'#8a4fff',g3:'#2f7bff',g4:'#0f8f6f'};
+function headline(t){
+  const h=HEAD.find(x=>t>=x.s.t0-0.05&&t<=x.s.t1+0.1);
+  if(!h){$('h1').style.opacity=0;$('h2').style.opacity=0;$('deco').innerHTML='';return}
+  const a=h.s.t0+0.1,b=h.s.t1-0.25;
+  if($('h1').dataset.k!==h.s.id){$('h1').innerHTML=h.h[0];$('h2').innerHTML=h.h[1];$('h1').dataset.k=h.s.id}
+  reveal($('h1'),win(t,a,a+0.45,b,b+0.3),26,12);reveal($('h2'),win(t,a+BEAT,a+BEAT+0.45,b,b+0.3),18,8);
+  decorate(t,h,win(t,a,a+0.45,b,b+0.3),E(t,a+BEAT*0.5,a+BEAT*0.5+0.45));
+}
+function decorate(t,h,vis,p){
+  const el=document.querySelector('#h1 .g');if(!el||!h.deco){$('deco').innerHTML='';return}
+  const r=el.getBoundingClientRect(),x0=r.left-4,x1=r.right-10,yb=r.bottom,col=DCOL[el.className.match(/g\d/)[0]];
+  const dash=`pathLength="1" stroke="${col}" fill="none" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="${1-p}"`;
+  let svg='';
+  if(h.deco==='wave'){let d=`M${x0} ${yb+6}`;for(let x=x0;x<=x1;x+=4)d+=` L${x} ${(yb+6+5*Math.sin((x-x0)/28*2*Math.PI)).toFixed(1)}`;svg=`<path d="${d}" stroke-width="5" ${dash}/>`}
+  else if(h.deco==='marker')svg=`<path d="M${x0} ${yb-16} L${x1} ${yb-20}" stroke-width="24" opacity=".22" ${dash}/>`;
+  else{const cx=(r.left+r.right)/2,cy=(r.top+r.bottom)/2+4,rx=r.width/2+18,ry=r.height/2;
+    svg=`<path d="M${cx+rx*0.2} ${cy-ry} C ${cx+rx*1.4} ${cy-ry}, ${cx+rx*1.4} ${cy+ry}, ${cx} ${cy+ry} C ${cx-rx*1.4} ${cy+ry}, ${cx-rx*1.4} ${cy-ry*1.05}, ${cx+rx*0.35} ${cy-ry*0.92}" stroke-width="4" ${dash}/>`}
+  $('deco').innerHTML=svg;$('deco').style.opacity=vis;
+}
+
+// ---------- 产品窗口：三个功能段共用一个窗口，按段切视图 ----------
+$('appTitle').textContent=TX.app;
+$('side').innerHTML=TX.side.map((s,i)=>`<p class="${i===1?'on':''}">${s}</p>`).join('');
+$('notes').innerHTML=TX.notes.map(n=>`<div class="note">${n}</div>`).join('');
+$('btn').textContent=TX.btn;$('card').innerHTML=`<h5>${TX.card[0]}</h5><p>${TX.card[1]}</p>`;
+$('statL').textContent=TX.statL;
+$('resl').innerHTML=TX.res.map(([a,b])=>`<div class="res"><i>${a}</i>${b}</div>`).join('');
+function appWin(t){
+  const a=S.f1.t0,b=S.f3.t1,ki=E(t,a,a+0.5),ko=EI(t,b-0.4,b),w=$('app');
+  w.style.opacity=Math.min(ki,1-ko);w.style.transform=`translateY(${(1-ki)*40+ko*30}px) scale(${0.98+0.02*ki})`;
+  [['v1',S.f1],['v2',S.f2],['v3',S.f3]].forEach(([id,s],i)=>{const v=$(id),k=win(t,s.t0-(i?0.15:1),s.t0+(i?0.25:0),s.t1-0.15,s.t1+0.15);v.style.opacity=i===2?Math.min(k,1):k;v.style.display=k>0?'block':'none'});
+  // v1：点「整理」→ 要点卡片弹出，原笔记退为背景
+  $('btn').style.transform=`scale(${t>=T.pick&&t<T.pick+0.15?0.94:1})`;
+  pop($('card'),t,T.result,0.35,0.85);
+  [...$('notes').children].forEach(n=>n.style.opacity=1-0.5*E(t,T.result,T.result+0.4));
+  // v2：点输入框 → 逐字输入 → 发送 → 回复流式出现
+  const ty=EV.find(e=>e.id==='typing'),typed=TX.typed,inp=$('inp');
+  const nc=Math.round(typed.length*P(t,ty.t,ty.t+ty.dur));
+  if(t<T.send){inp.classList.toggle('ph',nc===0);inp.textContent=nc?typed.slice(0,nc)+(t%0.5<0.25?'|':''):TX.ph}else{inp.classList.add('ph');inp.textContent=TX.ph}
+  const mu=$('mu'),ma=$('ma');mu.textContent=typed;reveal(mu,E(t,T.send,T.send+0.3),16,0);mu.style.display=t>=T.send?'block':'none';
+  const full=TX.reply,rk=P(t,T.reply,T.reply+0.9);ma.style.display=t>=T.reply-0.3?'block':'none';
+  ma.innerHTML=(t<T.reply?'…':full.slice(0,Math.ceil(full.length*rk)))+(rk>=1?`<small style="opacity:${E(t,T.reply+0.9,T.reply+1.3)}">${TX.src}</small>`:'');
+  // v3：大数字盖章 + 结果逐行出现
+  const st=$('stat');st.innerHTML=`${TX.stat}<small>${TX.unit}</small>`;pop(st,t,T.stat,0.3,1.6);
+  reveal($('statL'),E(t,T.stat+0.3,T.stat+0.7),14,6);
+  [...$('resl').children].forEach((r,i)=>reveal(r,E(t,T.stat+0.6+beat(i)*0.5,T.stat+0.95+beat(i)*0.5),18,6));
+}
+
+// ---------- 总结段 ----------
+const JC=['#ff6f61','#8a4fff','#2f7bff','#0f8f6f'];
+$('jobs').innerHTML=TX.jobs.map(([ic,b,s],i)=>`<div class="job"><i style="background:${JC[i]}">${ic}</i><b>${b}</b><span>${s}</span></div>`).join('');
+$('hero').textContent=TX.name[0];
+function recap(t){
+  const s=S.recap;[...$('jobs').children].forEach((c,i)=>reveal(c,win(t,T['r'+(i+1)],T['r'+(i+1)]+0.35,s.t1-0.3,s.t1),24,6));
+  const h=$('hero');pop(h,t,s.t0+0.15,0.4,1.25);h.style.opacity=Math.min(Number(h.style.opacity),1-EI(t,s.t1-0.3,s.t1));
+  h.style.transform+=` rotate(${-6+4*Math.sin(t*1.3)}deg)`;
+}
+
+// ---------- 光标：[时间, 目标]，目标是元素 id / [x,y] / null（隐藏）。到达时间就是点击时间 ----------
+const CUR=[[S.f1.t0+0.9,null],[S.f1.t0+1.0,[1560,1000]],[T.pick,'btn'],[T.pick+1.0,'btn'],[S.f2.t0+0.2,[1600,980]],
+  [T.focus,'inp'],[T.send,'send'],[T.reply+0.8,[1720,1010]],[S.f2.t1-0.3,null]];
+const pt=v=>{if(v===null||Array.isArray(v))return v;const r=$(v).getBoundingClientRect();return [r.left+r.width*0.55,r.top+r.height*0.55]};
+function cursorAt(t){for(let i=0;i<CUR.length-1;i++){const [a,p0]=CUR[i],[b,p1]=CUR[i+1];if(t>=a&&t<b){const A=pt(p0);if(!A)return null;const B=pt(p1)||A,mv=Math.min(0.6,b-a);const k=EI(t,b-mv,b);return [lerp(A[0],B[0],k),lerp(A[1],B[1],k)]}}return null}
+const CLICKS=EV.filter(e=>e.type==='click').map(e=>e.t);
+function cursor(t){
+  const c=cursorAt(t),cu=$('cursor'),rp=$('ripple');
+  if(!c){cu.style.opacity=0;rp.style.opacity=0;return}
+  cu.style.opacity=1;cu.style.left=(c[0]-8)+'px';cu.style.top=(c[1]-4)+'px';
+  const cl=CLICKS.find(x=>t>=x&&t<x+0.45);
+  if(cl!==undefined){const q=P(t,cl,cl+0.45);rp.style.opacity=1-q;rp.style.left=(c[0]-35)+'px';rp.style.top=(c[1]-35)+'px';rp.style.transform=`scale(${0.3+0.9*eo(q)})`;cu.style.transform=`scale(${q<0.25?0.85:1})`}
+  else{rp.style.opacity=0;cu.style.transform='none'}
+}
+
+// ---------- 合成一帧 ----------
+function render(t){
+  const cs=collage(t);
+  $('grain').style.opacity=cs?0.10:0.05;
+  headline(t); appWin(t); recap(t); cursor(t);
+  $('stage').style.opacity=1-P(t,DURATION-0.6,DURATION);
+}
+window.render=render;
+window.__ready=document.fonts.ready.then(()=>{render(0);return true});
+</script></body></html>

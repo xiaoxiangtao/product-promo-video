@@ -13,10 +13,9 @@ ffmpeg, and the soundtrack is synthesized with numpy so every cut and click land
 
 ## Why code instead of an editor
 
-A promo video goes through many rounds of small changes. The one this skill was distilled from (the
-promo for [desktop-pet](https://github.com/xiaoxiangtao/desktop-pet)) went through 26 versions, and
-almost every round touched a single timestamp, one line of copy, or one bar of music. When the whole
-video is code, each of those is a one-line edit and a re-render: any frame can be reproduced on its
+A promo video goes through many rounds of small changes, and most rounds touch a single timestamp,
+one line of copy, or one bar of music. When the whole video is code, each of those is a one-line edit
+and a re-render: any frame can be reproduced on its
 own, an English version is `?lang=en`, and the soundtrack follows the storyboard automatically.
 
 ## What's inside
@@ -24,12 +23,17 @@ own, an English version is `?lang=en`, and the soundtrack follows the storyboard
 | Path | Purpose |
 |---|---|
 | `SKILL.md` | The workflow the agent follows: facts → storyboard → style frames → build → sound → render & review → iterate → deliver, with a user check-in after each stage |
-| `assets/template/promo.html` | A working 40 s template: paper-collage intro/outro, three feature scenes (click → card, typing → streamed reply, stat stamp), recap cards |
+| `assets/template/promo.html` | A working 40 s template: intro/outro (a replaceable paper-collage example), three feature scenes (click → card, typing → streamed reply, stat stamp), recap cards |
 | `scripts/render_video.mjs` | Headless Chrome via CDP → ffmpeg. Partial renders (`--from/--to`), stills, contact-sheet frames; aborts on page JS errors |
 | `scripts/synth_music.py` | Additive-synthesis soundtrack + UI sound effects, driven by the page's timeline |
 | `scripts/add_voice.py` | Optional narration / in-scene voice (macOS `say` or your own recordings) with ducking |
 | `scripts/finalize.py` | Loudness-normalized mux, two-pass web encode, poster frame, labeled contact sheet, loudness meter |
 | `references/` | Storyboard & copywriting, visual & motion vocabulary, audio arrangement rules, QA checklist |
+
+**The intro/outro style is yours to choose.** The skill asks for your preference and mocks up 2–3
+distinct directions as still frames (minimal type, product hero shot, gradient light, paper collage,
+hand-drawn, UI mosaic…) before building anything. The paper collage in the template is just one
+ready-to-run example; the feature scenes stay the same whichever you pick.
 
 One design choice matters more than the rest: **the timeline lives in exactly one place**, a
 `<script id="timeline" type="application/json">` block inside the page. The animation, the music,
@@ -90,8 +94,7 @@ MIT
 
 用纯代码做 Apple 产品介绍风格的 40–65 秒产品介绍片。画面是 HTML 页面，`render(t)` 只依赖时间；
 无头 Chrome 逐帧截图后交给 ffmpeg 编码；配乐和界面音效用 numpy 合成，按同一份时间轴自动卡点。
-片头片尾是彩色剪纸拼贴，功能段是浅色桌面上的真实产品界面复刻加光标交互演示。
+功能段是浅色桌面上的真实产品界面复刻加光标交互演示；片头片尾的风格由你决定，技能会先出几张
+不同方向的静帧让你挑，模板里的剪纸拼贴只是一个可以直接跑的示例。
 
-这套方法来自 [desktop-pet](https://github.com/xiaoxiangtao/desktop-pet) 宣传片的 26 版迭代，
-技能里的分镜、文案、视觉、配乐规则和踩坑清单都来自那些真实反馈。安装方式和上面一样：把本目录放进
-agent 的 skills 目录，然后说"给我的 App 做一个苹果风的产品介绍视频"即可。
+安装：把本目录放进 agent 的 skills 目录，然后说"给我的 App 做一个苹果风的产品介绍视频"即可。
